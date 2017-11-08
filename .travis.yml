@@ -1,10 +1,10 @@
 sudo: required
 language: bash
 
-# Only build pushes to master.
+# exclude tags.
 branches:
-  only:
-    - master
+  except:
+  - /^\d+.\d+.\d+$/
 
 services:
   - docker
@@ -20,21 +20,19 @@ env:
     - CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
 before_install:
+
   # Install envtpl for easy templating.
   - sudo pip install envtpl
 
   - mkdir "$HOME/.bintray"
-  - envtpl < .nexuscredential > "$HOME/.ivy2/.credentials"
   - envtpl < .credentials > "$HOME/.bintray/.credentials"
 
-  - export CI_BUILD_NUMBER=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $CI_BUILD_NUMBER; else echo "${TRAVIS_BUILD_NUMBER}-SNAPSHOT"; fi)
+  # Use SNAPSHOT for all other than master builds.
+  - export CI_BUILD_NUMBER=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then echo $CI_BUILD_NUMBER; else echo "${TRAVIS_BUILD_NUMBER}-SNAPSHOT"; fi)
   - echo "CI_BUILD_NUMBER=${CI_BUILD_NUMBER}"
 
-  # Login to mup.cr
-  - docker login --email not@val.id --username travis --password $DOCKER_PASS mup.cr
-
 script:
-  - make $(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo publish; else echo package; fi)
+  - make $(if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then echo publish; else echo package; fi)
 
 after_success:
   - git config --global user.email "builds@travis-ci.com"
@@ -43,7 +41,7 @@ after_success:
   - echo "GIT_TAG=$GIT_TAG"
   - >
     [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] &&
-    git tag $GIT_TAG -f -a -m "Version $GIT_TAG built by Travis CI - https://travis-ci.com/$TRAVIS_REPO_SLUG/builds/$TRAVIS_JOB_ID"
+    git tag $GIT_TAG -f -a -m "Version $GIT_TAG built by Travis CI - https://travis-ci.org/$TRAVIS_REPO_SLUG/builds/$TRAVIS_JOB_ID"
     || true
   - >
     [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] &&
