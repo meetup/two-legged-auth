@@ -7,6 +7,7 @@ Specify the `com.meetup.auth.config.Configuration` using `loadConfigurationFromE
 Than instantiate `com.meetup.auth.MeetupConsumer`.<br>
 Use consumer to perform get/post requests.
 
+
 ```scala
 import com.meetup.auth.config.Configuration
 import com.meetup.auth.MeetupConsumer
