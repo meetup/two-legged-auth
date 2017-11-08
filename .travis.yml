@@ -1,56 +1,40 @@
 sudo: required
 language: bash
 
-# exclude tags
+# Only build pushes to master.
 branches:
-  except:
-    - /^\d+$/
+  only:
+    - master
 
 services:
   - docker
 
 cache:
   directories:
-  # these directories are typically caches for our common build tools
-  # travis will keep persistent cache across builds to reduce
-  # the amount of redundant work these build tools to do
   - "$HOME/.ivy2"
   - "$HOME/.sbt"
 
-
 env:
   global:
-    # build number used by blt pipeline
     - CI_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
-    # disables gcloud installation prompts
     - CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
 before_install:
   # Install envtpl for easy templating.
   - sudo pip install envtpl
 
-  # GET credentials for artifact retrieval/publishing using env vars
+  - mkdir "$HOME/.bintray"
   - envtpl < .nexuscredential > "$HOME/.ivy2/.credentials"
+  - envtpl < .credentials > "$HOME/.bintray/.credentials"
 
-  # Login to mup.cr to publish artifacts
-  - docker login --username $DOCKER_USER --password $DOCKER_PASS mup.cr
+  - export CI_BUILD_NUMBER=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $CI_BUILD_NUMBER; else echo "${TRAVIS_BUILD_NUMBER}-SNAPSHOT"; fi)
+  - echo "CI_BUILD_NUMBER=${CI_BUILD_NUMBER}"
 
-  # Install gcloud and kubectl
-  - rm -rf ${HOME}/google-cloud-sdk
-  - curl https://sdk.cloud.google.com | bash;
-  - export PATH=${HOME}/google-cloud-sdk/bin:$PATH
-  - gcloud components install kubectl
-
-  # authenticate gcp requests the gcloud cli tool makes
-  - echo $GCP_SECRET > client-secret.json
-  - gcloud auth activate-service-account --key-file client-secret.json
-  - export GOOGLE_APPLICATION_CREDENTIALS="$TRAVIS_BUILD_DIR/client-secret.json"
+  # Login to mup.cr
+  - docker login --email not@val.id --username travis --password $DOCKER_PASS mup.cr
 
 script:
-  # this drives the main behavior of Travis in response to actions in the associated repo, that is
-  # For master merges, this is what runs: "make publish deploy-prod"
-  # For commits and PRs: "make package"
-  - if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then make publish deploy-prod; else make package; fi
+  - make $(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo publish; else echo package; fi)
 
 after_success:
   - git config --global user.email "builds@travis-ci.com"
@@ -59,15 +43,8 @@ after_success:
   - echo "GIT_TAG=$GIT_TAG"
   - >
     [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] &&
-    git tag $GIT_TAG -f -a -m "Version $GIT_TAG built by Travis CI - https://travis-ci.com/$TRAVIS_REPO_SLUG/builds/$TRAVIS_BUILD_ID"
+    git tag $GIT_TAG -f -a -m "Version $GIT_TAG built by Travis CI - https://travis-ci.com/$TRAVIS_REPO_SLUG/builds/$TRAVIS_JOB_ID"
     || true
   - >
     [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] &&
-    git push -q --tags || true
-
-# travis calls this "semi-secret", but including it here, because we can always shut this down
-# and I'd rather keep integrations transparent (not impossible to find/manage/understand)
-# the following sends notifications to slack channel: #pro-builds
-# see: https://meetuphq.slack.com/services/B43DLJD44
-notifications:
-  slack: meetuphq:c3PpDfB9g2mA49xoZLEnW98l
+    git push -q https://$GITHUB_USER:$GITHUB_TOKEN@github.com/$TRAVIS_REPO_SLUG --tags || true

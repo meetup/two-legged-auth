@@ -1,10 +1,12 @@
 # Two legged Auth
+[![Build Status](https://travis-ci.org/meetup/two-legged-auth.svg?branch=master)](https://travis-ci.org/meetup/two-legged-auth)
 Generic open library providing easy way of performing get/post method using 2-legged authentication
 
 ## Usage
 Specify the `com.meetup.auth.config.Configuration` using `loadConfigurationFromEnv`,
 Than instantiate `com.meetup.auth.MeetupConsumer`.<br>
 Use consumer to perform get/post requests.
+
 
 ```scala
 import com.meetup.auth.config.Configuration
