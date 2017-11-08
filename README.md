@@ -1,5 +1,5 @@
 # Two legged Auth
-[![Build Status](https://travis-ci.com/meetup/two-legged-auth.svg?token=Sjsnq6QWgKRzU6MMwRvC&branch=master)](https://travis-ci.com/meetup/two-legged-auth)
+[![Build Status](https://travis-ci.org/meetup/two-legged-auth.svg?branch=master)](https://travis-ci.org/meetup/two-legged-auth)
 Generic open library providing easy way of performing get/post method using 2-legged authentication
 
 ## Usage
