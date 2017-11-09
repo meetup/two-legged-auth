@@ -8,48 +8,45 @@ CI_WORKDIR ?= $(shell pwd)
 
 VERSION ?= 0.1.$(CI_BUILD_NUMBER)
 
-BUILDER_TAG = "mup.cr/blt/build-sbt:78"
+BUILDER_TAG = "meetup/sbt-builder:0.1.5"
 
-package-sbt:
+package: __contained-target ## Packages jar artifact.
+
+publish: __set-publish __contained-target ## Publishes jar artifact.
+
+version: ## Prints artifact version.
+	@echo $(VERSION)
+
+__clean: # Cleans sbt artifacts
+	@sbt clean
+	rm -rf $(TARGET_DIR)
+
+__package-sbt:
 	sbt clean \
 		"set coverageEnabled := true" \
 		"set coverageOutputHTML := false" \
 		test \
 		coverageReport \
 		coverallsMaybe \
-		coverageOff
+		coverageOff \
+		publishLocal \
+		component:test
 
-# We clean the locally cached version
-# of the jar when we're done publishing.
-publish-sbt: package-sbt
-	sbt publish
+__publish-sbt: __package-sbt
+	sbt publish cleanLocal
 
-publish:
+__set-publish:
+	$(eval TARGET=__publish-sbt)
+
+__contained-target:
 	docker run \
 		--rm \
 		-v $(CI_WORKDIR):/data \
 		-v $(CI_IVY_CACHE):/root/.ivy2 \
 		-v $(CI_SBT_CACHE):/root/.sbt \
 		-v $(HOME)/.bintray:/root/.bintray \
-		-e VERSION=$(VERSION) \
-		-e COVERALLS_REPO_TOKEN=$(COVERALLS_REPO_TOKEN) \
+		-e CI_BUILD_NUMBER=$(CI_BUILD_NUMBER) \
 		-e TRAVIS_JOB_ID=$(TRAVIS_JOB_ID) \
+		-e TRAVIS_PULL_REQUEST=$(TRAVIS_PULL_REQUEST) \
 		$(BUILDER_TAG) \
-		publish-sbt
-
-package:
-	docker run \
-		--rm \
-		-v $(CI_WORKDIR):/data \
-		-v $(CI_IVY_CACHE):/root/.ivy2 \
-		-v $(CI_SBT_CACHE):/root/.sbt \
-		-v $(HOME)/.bintray:/root/.bintray \
-		-e VERSION=$(VERSION) \
-		-e COVERALLS_REPO_TOKEN=$(COVERALLS_REPO_TOKEN) \
-		-e TRAVIS_JOB_ID=$(TRAVIS_JOB_ID) \
-		$(BUILDER_TAG) \
-		package-sbt
-
-# Required for SBT.
-version:
-	@echo $(VERSION)
+		make $(TARGET)
