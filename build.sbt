@@ -1,3 +1,6 @@
+enablePlugins(CommonSettingsPlugin)
+enablePlugins(CoverallsWrapper)
+
 scalaVersion := "2.11.8"
 credentials += Credentials(Path.userHome / ".ivy2" / ".credentials")
 resolvers += "Nexus" at "https://nexus.blt.meetup.com/content/repositories/releases"
