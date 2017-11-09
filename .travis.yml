@@ -33,11 +33,11 @@ before_install:
 
 script:
   - >
-  if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
-    make publish;
-  else
-    make package;
-  fi
+    if [ "$TRAVIS_PULL_REQUEST" == "false" ] && [ "$TRAVIS_BRANCH" == "master" ]; then
+      make publish;
+    else
+      make package;
+    fi
 
 after_success:
   - git config --global user.email "builds@travis-ci.org"
