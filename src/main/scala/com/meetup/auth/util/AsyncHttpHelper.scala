@@ -3,7 +3,7 @@ package com.meetup.auth.util
 import scala.collection.JavaConverters._
 
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
-import io.netty.handler.ssl.{ SslContextBuilder, SslProvider }
+import io.netty.handler.ssl.{SslContextBuilder, SslProvider}
 import org.asynchttpclient._
 
 object AsyncHttpHelper {
@@ -26,9 +26,9 @@ object AsyncHttpHelper {
 }
 
 /**
-  * Get/Post http request build helper.
-  *
-  */
+ * Get/Post http request build helper.
+ *
+ */
 class AsyncHttpHelper(client: AsyncHttpClient, userAgent: String) {
 
   def asyncGet(url: String, params: Map[String, String], headers: Map[String, String]): ListenableFuture[Response] = {

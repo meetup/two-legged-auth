@@ -17,16 +17,15 @@ trait MeetupConsumer {
   def getAccessTokenOnly(memberId: String): Option[String]
 }
 
-
 /**
-  * Provides token access and classic api post/get methods
-  *
-  * @see {@link com.meetup.auth.config.Configuration}
-  */
-class MeetupConsumerImpl(configuration: Configuration)
-                        (httpHelper: HttpHelper = new HttpHelper(),
-                         asyncHttpHelper: AsyncHttpHelper = AsyncHttpHelper(configuration.userAgent),
-                         memberId: Option[String] = None) extends MeetupConsumer with Logging {
+ * Provides token access and classic api post/get methods
+ *
+ * @see {@link com.meetup.auth.config.Configuration}
+ */
+class MeetupConsumerImpl(configuration: Configuration)(
+  httpHelper: HttpHelper = new HttpHelper(),
+    asyncHttpHelper: AsyncHttpHelper = AsyncHttpHelper(configuration.userAgent),
+    memberId: Option[String] = None) extends MeetupConsumer with Logging {
   val AUTHORIZATION_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer" //https://tools.ietf.org/html/rfc7523#section-2.1
   val jwtUtil = new JwtUtil(
     issuer = configuration.issuer,

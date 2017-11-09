@@ -1,13 +1,13 @@
 package com.meetup.auth.util
 
-import java.security.{ KeyFactory, KeyPairGenerator }
-import java.security.interfaces.{ RSAPrivateKey, RSAPublicKey }
-import java.security.spec.{ PKCS8EncodedKeySpec, X509EncodedKeySpec }
-import java.time.{ ZoneOffset, ZonedDateTime }
+import java.security.{KeyFactory, KeyPairGenerator}
+import java.security.interfaces.{RSAPrivateKey, RSAPublicKey}
+import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
+import java.time.{ZoneOffset, ZonedDateTime}
 import java.util.Base64
 import org.json4s.JsonDSL._
 import prints.Algorithm.Key.Rsa
-import prints.{ Claims, Header, JWT }
+import prints.{Claims, Header, JWT}
 
 // right now, implementing a pattern that we'll want to pull out into a template or possibly https-oauth2-call monad
 /**
