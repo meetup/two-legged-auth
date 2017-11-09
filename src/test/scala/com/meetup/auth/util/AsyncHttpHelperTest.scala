@@ -2,7 +2,7 @@ package com.meetup.auth.util
 
 import org.asynchttpclient.AsyncHttpClient
 import org.mockito.Mockito.{when => mockWhen}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSpec, GivenWhenThen}
 
 import scala.collection.JavaConverters._

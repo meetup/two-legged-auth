@@ -23,7 +23,7 @@ trait MeetupConsumer {
  * @see {@link com.meetup.auth.config.Configuration}
  */
 class MeetupConsumerImpl(configuration: Configuration)(
-  httpHelper: HttpHelper = new HttpHelper(),
+    httpHelper: HttpHelper = new HttpHelper(),
     asyncHttpHelper: AsyncHttpHelper = AsyncHttpHelper(configuration.userAgent),
     memberId: Option[String] = None) extends MeetupConsumer with Logging {
   val AUTHORIZATION_GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer" //https://tools.ietf.org/html/rfc7523#section-2.1

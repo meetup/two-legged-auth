@@ -5,7 +5,7 @@ import com.meetup.auth.util.AsyncHttpHelper
 import org.asynchttpclient.{ListenableFuture, Response}
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{when => mockWhen}
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSpec, GivenWhenThen}
 
 class MeetupConsumerTest extends FunSpec with GivenWhenThen with MockitoSugar {

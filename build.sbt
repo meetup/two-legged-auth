@@ -16,9 +16,8 @@ libraryDependencies ++= {
     "org.asynchttpclient" % "async-http-client" % "2.0.26",
     "me.lessis" %% "base64" % "0.2.0",
 
-    // test
-    "org.scalatest" %% "scalatest" % "3.0.0" % "test",
-    "org.mockito" % "mockito-core" % "2.7.9" % "test"
+    //test
+    "org.mockito" % "mockito-core" % "2.8.47" % "test"
   )
 }
 
