@@ -1,6 +1,7 @@
 # Two legged Auth
 [![Build Status](https://travis-ci.org/meetup/two-legged-auth.svg?branch=master)](https://travis-ci.org/meetup/two-legged-auth)
-Generic open library providing easy way of performing get/post method using 2-legged authentication
+
+Generic open library providing easy way of performing get/post method using 2-legged authentication.
 
 ## Usage
 Specify the `com.meetup.auth.config.Configuration` using `loadConfigurationFromEnv`,
@@ -20,7 +21,7 @@ val configuration = Configuration.loadConfigurationFromEnv(issuer = "app-service
                                     "APP_CHAPSTICK_API_ROOT_URL",
                                     "APP_TEST_API_KEY",
                                     "APP_FF_WHITELISTONLY")
- 
+
 val meetupConsumer = MeetupConsumer(configuration)
 
 ```
