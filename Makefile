@@ -6,6 +6,8 @@ CI_IVY_CACHE ?= $(HOME)/.ivy2
 CI_SBT_CACHE ?= $(HOME)/.sbt
 CI_WORKDIR ?= $(shell pwd)
 
+TARGET ?= __package-sbt
+
 VERSION ?= 0.1.$(CI_BUILD_NUMBER)
 
 BUILDER_TAG = "meetup/sbt-builder:0.1.5"
