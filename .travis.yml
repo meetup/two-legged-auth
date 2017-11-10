@@ -40,17 +40,16 @@ script:
     fi
 
 after_success:
-  - git config --global user.email "builds@travis-ci.org"
-  - git config --global user.name "Travis CI"
-  - export GIT_TAG=v$(make version)
-  - echo "GIT_TAG=$GIT_TAG"
-  - eval "$(ssh-agent)"
-  - echo $GITHUB_DEPLOY_KEY | base64 --decode > /tmp/github_deploy_key
-  - chmod 600 /tmp/github_deploy_key
-  - ssh-add /tmp/github_deploy_key
   - >
-    [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] &&
-    git tag $GIT_TAG -f -a -m "Version $GIT_TAG built by Travis CI - https://travis-ci.org/$TRAVIS_REPO_SLUG/jobs/$TRAVIS_JOB_ID"
-  - >
-    [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ] &&
-    git push -q git@github.com:$TRAVIS_REPO_SLUG.git --tags > /dev/null 2>&1
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ] && [ "${TRAVIS_BRANCH}" = "master" ]; then
+      eval "$(ssh-agent)";
+      echo "$GITHUB_DEPLOY_KEY" > /tmp/github_deploy_key;
+      chmod 600 /tmp/github_deploy_key;
+      ssh-add /tmp/github_deploy_key;
+      git config --global user.email "builds@travis-ci.org";
+      git config --global user.name "Travis CI";
+      export GIT_TAG=v$(make version);
+      echo "GIT_TAG=$GIT_TAG";
+      git tag $GIT_TAG -f -a -m "Version $GIT_TAG built by Travis CI - https://travis-ci.org/$TRAVIS_REPO_SLUG/jobs/$TRAVIS_JOB_ID";
+      git push -q git@github.com:$TRAVIS_REPO_SLUG.git --tags;
+    fi
