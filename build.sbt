@@ -8,7 +8,6 @@ libraryDependencies ++= {
 
   Seq(
     "io.reactivex" % "rxnetty" % "0.4.20",
-    "org.json4s" %% "json4s-native" % "3.4.0",
     "com.netflix.hystrix" % "hystrix-rx-netty-metrics-stream" % "1.4.23"
       exclude("io.reactivex", "rxnetty")
       exclude("com.netflix.archaius", "archaius-core"), // TODO make sure this is safe

@@ -12,12 +12,9 @@ import scala.util.control.Exception.allCatch
  * @param classicOAuthClientKey oauth client_key as registered in Meetup Classic
  * @param accessTokenUrl where to post request to get a new accessToken
  * @param apiRootUrl Classic base url including protocol. no trailing "/" recommended
- * @param testApiKey for use with API-Key-based requests for testing-only against Classic (otherwise, we use oauth2
- * @param ffWhitelistOnly enable whitelisting
  */
 case class Configuration(issuer: String, userAgent: String, privateKey: String, publicKey: String,
-  classicOAuthClientKey: String, accessTokenUrl: String, apiRootUrl: String,
-  testApiKey: String, ffWhitelistOnly: Boolean)
+  classicOAuthClientKey: String, accessTokenUrl: String, apiRootUrl: String)
 
 object Configuration {
 
@@ -47,31 +44,25 @@ object Configuration {
    * @param classicOAuthClientKeyTag env variable name for oauth client_key as registered in Meetup Classic
    * @param accessTokenUrlTag env variable name for where to post request to get a new accessToken
    * @param apiRootUrlTag env variable name for classic base url including protocol. no trailing "/" recommended
-   * @param testApiKeyTag env variable name for api key which for use with API-Key-based requests for testing-only against Classic (otherwise, we use oauth2
-   * @param ffWhitelistOnlyTag env variable name for whitelisting, if absent will `ffWhitelistOnly` be set to `true`
    *
    * @example {{{ loadConfigurationFromEnv(issuer = "app-service", userAgent = "APP/0.1")
    *          ("APP_PRIVATE_KEY",
    *           "APP_PUBLIC_KEY",
    *           "APP_CLASSIC_OAUTH2_CLIENT_KEY",
    *           "APP_CHAPSTICK_ACCESS_TOKEN_URL",
-   *           "APP_CHAPSTICK_API_ROOT_URL",
-   *           "APP_TEST_API_KEY",
-   *           "APP_FF_WHITELISTONLY") }}}
+   *           "APP_CHAPSTICK_API_ROOT_URL") }}}
    */
-  def loadConfigurationFromEnv(issuer: String, userAgent: String)(privateKeyTag: String, publicKeyTag: String, classicOAuthClientKeyTag: String,
-    accessTokenUrlTag: String, apiRootUrlTag: String, testApiKeyTag: String,
-    ffWhitelistOnlyTag: String): Configuration = new Configuration(
-    issuer = issuer,
-    userAgent = userAgent,
-    privateKey = resolutionOrderOrElse(privateKeyTag, "bad-private-key, none in environment"),
-    publicKey = resolutionOrderOrElse(publicKeyTag, "bad-public-key, none in environment"),
-    classicOAuthClientKey = resolutionOrderOrElse(classicOAuthClientKeyTag, "bad-oauth-client-key, none in environment"),
-    accessTokenUrl = resolutionOrderOrElse(accessTokenUrlTag, "secure.dev.meetup.com/oauth2/access"),
-    apiRootUrl = resolutionOrderOrElse(apiRootUrlTag, "api.dev.meetup.com"),
-    testApiKey = resolutionOrderOrElse(testApiKeyTag, "bad-test-api-key, none in environment"),
-    ffWhitelistOnly = resolutionOrderOrElse(ffWhitelistOnlyTag, true) // white-listing, unless otherwise specified is off
-  )
+  def loadConfigurationFromEnv(issuer: String, userAgent: String)(privateKeyTag: String, publicKeyTag: String,
+    classicOAuthClientKeyTag: String, accessTokenUrlTag: String, apiRootUrlTag: String): Configuration =
+    new Configuration(
+      issuer = issuer,
+      userAgent = userAgent,
+      privateKey = resolutionOrderOrElse(privateKeyTag, "bad-private-key, none in environment"),
+      publicKey = resolutionOrderOrElse(publicKeyTag, "bad-public-key, none in environment"),
+      classicOAuthClientKey = resolutionOrderOrElse(classicOAuthClientKeyTag, "bad-oauth-client-key, none in environment"),
+      accessTokenUrl = resolutionOrderOrElse(accessTokenUrlTag, "secure.dev.meetup.com/oauth2/access"),
+      apiRootUrl = resolutionOrderOrElse(apiRootUrlTag, "api.dev.meetup.com")
+    )
 
   // first try to load property from scala-java Properties,
   // then try to load from environment,
