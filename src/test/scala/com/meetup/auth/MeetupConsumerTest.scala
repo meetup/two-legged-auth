@@ -9,7 +9,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{FunSpec, GivenWhenThen}
 
 class MeetupConsumerTest extends FunSpec with GivenWhenThen with MockitoSugar {
-  val configuration = Configuration("mock", "mock", "mock", "mock", "mock", "mock", "mock", "mock", true)
+  val configuration = Configuration("mock", "mock", "mock", "mock", "mock", "mock", "mock")
 
   describe("MeetupConsumer") {
     describe("optHttpsPostAHC") {
