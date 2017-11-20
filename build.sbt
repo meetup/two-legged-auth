@@ -17,8 +17,9 @@ libraryDependencies ++= {
     "me.lessis" %% "base64" % "0.2.0",
     "me.lessis" %% "prints" % "0.1.0",
 
-    //test
-    "org.mockito" % "mockito-core" % "2.8.47" % "test"
+    // Looks like there is an issue causing deadlocks which is introduced in 2.6.7+ but not fixed yet.
+    // See https://github.com/mockito/mockito/issues/1067
+    "org.mockito" % "mockito-core" % "2.6.6" % "test"
   )
 }
 
