@@ -35,8 +35,9 @@ class AsyncHttpHelper(client: AsyncHttpClient, userAgent: String) {
     client.executeRequest(createGetRequest(url, params, headers))
   }
 
-  def createGetRequest(url: String, params: Map[String, String], headers: Map[String, String]): Request = {
-    val adjustedHeaders = headers + ("User-Agent" -> userAgent)
+  def createGetRequest(url: String, params: Map[String, String], otherHeaders: Map[String, String]): Request = {
+    val headers = Map("User-Agent" -> userAgent)
+    val adjustedHeaders = headers ++ otherHeaders
     val request = new RequestBuilder()
       .setMethod("GET")
       .setUrl(url)
@@ -50,11 +51,15 @@ class AsyncHttpHelper(client: AsyncHttpClient, userAgent: String) {
     client.executeRequest(createPostRequestWithBody(url, contentBody, headers))
   }
 
-  def createPostRequestWithBody(url: String, contentBody: String, headers: Map[String, String]): Request = {
-    val adjustedHeaders = headers +
-      ("User-Agent" -> userAgent) +
-      ("Content-Type" -> "application/x-www-form-urlencoded") +
-      ("Content-Length" -> s"${contentBody.length}")
+  def createPostRequestWithBody(url: String, contentBody: String, otherHeaders: Map[String, String]): Request = {
+    val headers = Map(
+      "User-Agent" -> userAgent,
+      "Content-Type" -> "application/x-www-form-urlencoded",
+      "Content-Length" -> s"${contentBody.length}"
+    )
+
+    val adjustedHeaders = headers ++ otherHeaders
+
     val request = new RequestBuilder()
       .setMethod("POST")
       .setUrl(url)

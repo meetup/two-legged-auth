@@ -12,8 +12,13 @@ import scala.concurrent.Future
 import scala.util.Try
 
 trait MeetupConsumer {
-  def doClassicApiPost(memberId: String, hostAndPath: String, contentBody: String): Future[Option[String]] //change to type, when we actually do something
-  def doClassicApiGet(memberId: String, hostAndPath: String, params: Map[String, String]): Future[Option[String]]
+
+  def doClassicApiPost(memberId: String, hostAndPath: String, contentBody: String,
+    headers: Map[String, String] = Map()): Future[Option[String]] //change to type, when we actually do something
+
+  def doClassicApiGet(memberId: String, hostAndPath: String, params: Map[String, String],
+    headers: Map[String, String] = Map()): Future[Option[String]]
+
   def getAccessTokenOnly(memberId: String): Option[String]
 }
 
@@ -37,46 +42,54 @@ class MeetupConsumerImpl(configuration: Configuration)(
 
   //todo without a server, this has not been tested
   // though mechanism was tested with:  /ny-scala/?key=3b11f78e28c646b221f69282f3122"
-  def doClassicApiPost(memberId: String, hostAndPath: String, contentBody: String): Future[Option[String]] = {
+  def doClassicApiPost(memberId: String, hostAndPath: String, contentBody: String,
+    headers: Map[String, String] = Map()): Future[Option[String]] = {
     val optResultBody = for {
       token <- OauthToken orElse getAccessTokenOnly(memberId) // get access token for memberId  TODO fix this to prevent excess calls
-      callResult <- makePostCall(token, hostAndPath, contentBody) // then, make call with token
+      callResult <- makePostCall(token, hostAndPath, contentBody, headers) // then, make call with token
     } yield callResult
     Future(optResultBody)
   }
 
-  def doClassicApiGet(memberId: String, hostAndPath: String, params: Map[String, String]): Future[Option[String]] = {
+  def doClassicApiGet(memberId: String, hostAndPath: String, params: Map[String, String],
+    headers: Map[String, String] = Map()): Future[Option[String]] = {
     val optResultBody = for {
       token <- OauthToken orElse getAccessTokenOnly(memberId) // get access token for memberId  TODO fix this to prevent excess calls
-      callResult <- makeGetCall(token, hostAndPath, params) // then, make call with token
+      callResult <- makeGetCall(token, hostAndPath, params, headers) // then, make call with token
     } yield callResult
     Future(optResultBody)
   }
 
-  private[auth] def makePostCall(token: String, hostAndPath: String, contentBody: String): Option[String] = {
+  private[auth] def makePostCall(token: String, hostAndPath: String, contentBody: String, otherHeaders: Map[String, String]): Option[String] = {
+    val headers = Map("Authorization" -> s"Bearer $token") ++ otherHeaders
+
     optHttpsPostAHC(
       hostAndPath = hostAndPath,
       contentBody = contentBody,
-      moreHeaders = Map("Authorization" -> s"Bearer $token")
+      headers = headers
     )
   }
 
-  private[auth] def makeGetCall(token: String, hostAndPath: String, params: Map[String, String]): Option[String] = {
+  private[auth] def makeGetCall(token: String, hostAndPath: String, params: Map[String, String],
+    moreHeaders: Map[String, String]): Option[String] = {
+    val headers = Map("Authorization" -> s"Bearer $token") ++ moreHeaders
+
     optHttpsGet(
       hostAndPath = hostAndPath,
       params = params,
-      moreHeaders = Map("Authorization" -> s"Bearer $token")
+      headers = headers
     )
   }
 
-  private[auth] def optHttpsPost(hostAndPath: String, contentBody: String, moreHeaders: Map[String, String] = Map()): Option[String] = {
+  private[auth] def optHttpsPost(hostAndPath: String, contentBody: String,
+    moreHeaders: Map[String, String]): Option[String] = {
     val opt = Try(httpHelper.sendOldSchoolHttpsPost(hostAndPath, contentBody, moreHeaders))
     if (opt.isFailure) {
       opt.failed.map(th => {
         log.error(
-          s"failed to send POST: ${hostAndPath}\n" +
-            s"with contentBody:\n    ${contentBody}\n" +
-            s"and headers:\n    ${moreHeaders}\n" +
+          s"failed to send POST: $hostAndPath\n" +
+            s"with contentBody:\n    $contentBody\n" +
+            s"and headers:\n    $moreHeaders\n" +
             s"and error: ${th.getMessage}\nand trace:\n"
         )
         th.printStackTrace()
@@ -88,14 +101,14 @@ class MeetupConsumerImpl(configuration: Configuration)(
   /**
    * Using AsyncHttpClient
    */
-  private[auth] def optHttpsPostAHC(hostAndPath: String, contentBody: String, moreHeaders: Map[String, String] = Map()): Option[String] = {
-    val opt = Try(asyncHttpHelper.asyncPostWithBody(hostAndPath, contentBody, moreHeaders).get())
+  private[auth] def optHttpsPostAHC(hostAndPath: String, contentBody: String, headers: Map[String, String] = Map()): Option[String] = {
+    val opt = Try(asyncHttpHelper.asyncPostWithBody(hostAndPath, contentBody, headers).get())
     if (opt.isFailure) {
       opt.failed.map(th => {
         log.error(
-          s"failed to send POST: ${hostAndPath}\n" +
-            s"with contentBody:\n    ${contentBody}\n" +
-            s"and headers:\n    ${moreHeaders}\n" +
+          s"failed to send POST: $hostAndPath\n" +
+            s"with contentBody:\n    $contentBody\n" +
+            s"and headers:\n    $headers\n" +
             s"and error: ${th.getMessage}\nand trace:\n"
         )
         th.printStackTrace()
@@ -108,9 +121,9 @@ class MeetupConsumerImpl(configuration: Configuration)(
       case None => None
       case Some(r) if r.getStatusCode >= 400 =>
         log.error(
-          s"received non-200 response from POST: ${hostAndPath}\n" +
-            s"with contentBody:\n    ${contentBody}\n" +
-            s"and headers:\n    ${moreHeaders}\n" +
+          s"received non-200 response from POST: $hostAndPath\n" +
+            s"with contentBody:\n    $contentBody\n" +
+            s"and headers:\n    $headers\n" +
             s"and http status code: ${r.getStatusCode}\n" +
             s"and body: ${r.getResponseBody}\n"
         )
@@ -119,14 +132,14 @@ class MeetupConsumerImpl(configuration: Configuration)(
     }
   }
 
-  private[auth] def optHttpsGet(hostAndPath: String, params: Map[String, String], moreHeaders: Map[String, String] = Map()): Option[String] = {
-    val opt = Try(asyncHttpHelper.asyncGet(hostAndPath, params, moreHeaders).get())
+  private[auth] def optHttpsGet(hostAndPath: String, params: Map[String, String], headers: Map[String, String] = Map()): Option[String] = {
+    val opt = Try(asyncHttpHelper.asyncGet(hostAndPath, params, headers).get())
     if (opt.isFailure) {
       opt.failed.map(th => {
         log.error(
-          s"failed to send GET: ${hostAndPath}\n" +
-            s"with params:\n    ${params}\n" +
-            s"and headers:\n    ${moreHeaders}\n" +
+          s"failed to send GET: $hostAndPath\n" +
+            s"with params:\n    $params\n" +
+            s"and headers:\n    $headers\n" +
             s"and error: ${th.getMessage}\nand trace:\n"
         )
         th.printStackTrace()
@@ -139,9 +152,9 @@ class MeetupConsumerImpl(configuration: Configuration)(
       case None => None
       case Some(r) if r.getStatusCode >= 400 =>
         log.error(
-          s"received non-200 response from GET: ${hostAndPath}\n" +
-            s"with params:\n    ${params}\n" +
-            s"and headers:\n    ${moreHeaders}\n" +
+          s"received non-200 response from GET: $hostAndPath\n" +
+            s"with params:\n    $params\n" +
+            s"and headers:\n    $headers\n" +
             s"and http status code: ${r.getStatusCode}\n" +
             s"and body: ${r.getResponseBody}\n"
         )
@@ -152,7 +165,7 @@ class MeetupConsumerImpl(configuration: Configuration)(
 
   def getAccessTokenOnly(memberId: String): Option[String] = {
     val content = s"client_id=${configuration.classicOAuthClientKey}" +
-      s"&grant_type=${AUTHORIZATION_GRANT_TYPE}" +
+      s"&grant_type=$AUTHORIZATION_GRANT_TYPE" +
       s"&assertion=${jwtUtil.createTokenRequestAssertion(memberId).getOrElse("")}"
 
     log.info(content)
@@ -160,7 +173,7 @@ class MeetupConsumerImpl(configuration: Configuration)(
     val token = for {
       json <- opt
       JObject(listOfFields) <- parseOpt(json)
-      (key, value) <- listOfFields.filter(t => t._1.equalsIgnoreCase("access_token")).headOption
+      (key, value) <- listOfFields.find(t => t._1.equalsIgnoreCase("access_token"))
       JString(tk) <- value.toOption
     } yield tk
     token.foreach { _ => // if there is a token
