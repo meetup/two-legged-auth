@@ -131,9 +131,9 @@ class MeetupConsumerImpl(configuration: Configuration)(
     responseOpt match {
       case None => None
       case Some(r) if r.getStatusCode >= 400 =>
-        log.error(s"received non-200 response from $methodType\n" +
-          s"and http status code: ${r.getStatusCode}\n" +
-          s"and body: ${r.getResponseBody}\n")
+        log.error(s"Received non-200 response from $methodType. " +
+          s"HTTP code: [${r.getStatusCode}]. " +
+          s"URI: [${r.getUri}]. Body: [${r.getResponseBody}].")
         None
       case r => r.map(_.getResponseBody)
     }
