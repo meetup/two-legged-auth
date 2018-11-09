@@ -85,4 +85,26 @@ class AsyncHttpHelper(client: AsyncHttpClient, userAgent: String) {
       .build()
     request
   }
+
+  def asyncPatchWithBody(url: String, contentBody: String, headers: Map[String, String]): ListenableFuture[Response] = {
+    client.executeRequest(createPatchRequestWithBody(url, contentBody, headers))
+  }
+
+  def createPatchRequestWithBody(url: String, contentBody: String, otherHeaders: Map[String, String]): Request = {
+    val headers = Map(
+      "User-Agent" -> userAgent,
+      "Content-Type" -> "application/x-www-form-urlencoded",
+      "Content-Length" -> s"${contentBody.length}"
+    )
+
+    val adjustedHeaders = headers ++ otherHeaders
+
+    val request = new RequestBuilder()
+      .setMethod("PATCH")
+      .setUrl(url)
+      .setBody(contentBody)
+      .setSingleHeaders(adjustedHeaders.asJava)
+      .build()
+    request
+  }
 }
