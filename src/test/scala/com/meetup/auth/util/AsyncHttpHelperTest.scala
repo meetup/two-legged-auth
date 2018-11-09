@@ -35,7 +35,7 @@ class AsyncHttpHelperTest extends FunSpec with GivenWhenThen with MockitoSugar {
       val params = Map("Leroy" -> "Jenkins")
       val headers = Map("Foo" -> "Bar")
 
-      When("createGetRequest() is invoked")
+      When("createPostRequest() is invoked")
       val result = helper.createPostRequest(url, params, headers)
 
       Then("The result contains all the originally given info")
@@ -53,11 +53,29 @@ class AsyncHttpHelperTest extends FunSpec with GivenWhenThen with MockitoSugar {
       val body = "Leroy=Jenkins"
       val headers = Map("Foo" -> "Bar")
 
-      When("createGetRequest() is invoked")
+      When("createPostRequestWithBody() is invoked")
       val result = helper.createPostRequestWithBody(url, body, headers)
 
       Then("The result contains all the originally given info")
       assert(result.getMethod == "POST")
+      assert(result.getUrl == url)
+      assert(result.getStringData == body)
+      assert(result.getHeaders.contains("Foo", "Bar", false))
+    }
+
+    it("creates PATCH request with content body") {
+      Given("required info for PATCH request")
+      val client = mock[AsyncHttpClient]
+      val helper = new AsyncHttpHelper(client, "BCAN/0.1")
+      val url = "http://nyan.cat"
+      val body = "Leroy=Jenkins"
+      val headers = Map("Foo" -> "Bar")
+
+      When("createPatchRequestWithBody() is invoked")
+      val result = helper.createPatchRequestWithBody(url, body, headers)
+
+      Then("the result contains all the originally given info")
+      assert(result.getMethod == "PATCH")
       assert(result.getUrl == url)
       assert(result.getStringData == body)
       assert(result.getHeaders.contains("Foo", "Bar", false))
