@@ -20,6 +20,9 @@ trait MeetupConsumer {
   def doClassicApiGet(memberId: String, hostAndPath: String, params: Map[String, String],
     headers: Map[String, String] = Map())(responseHandler: Option[Response] => Option[String]): Future[Option[String]]
 
+  def doClassicApiPatch(memberId: String, hostAndPath: String, contentBody: String,
+    headers: Map[String, String] = Map())(responseHandler: Option[Response] => Option[String]): Future[Option[String]]
+
   def getAccessTokenOnly(memberId: String): Option[String]
 }
 
@@ -61,6 +64,15 @@ class MeetupConsumerImpl(configuration: Configuration)(
     Future(optResultBody)
   }
 
+  override def doClassicApiPatch(memberId: String, hostAndPath: String, contentBody: String,
+    headers: Map[String, String] = Map())(responseHandler: Option[Response] => Option[String] = defaultPatchResponseHandler): Future[Option[String]] = {
+    val optResultBody = for {
+      token <- OauthToken orElse getAccessTokenOnly(memberId)
+      callResult <- makePatchCall(token, hostAndPath, contentBody, headers, responseHandler)
+    } yield callResult
+    Future(optResultBody)
+  }
+
   private[auth] def makePostCall(token: String, hostAndPath: String, contentBody: String, otherHeaders: Map[String, String],
     responseHandler: Option[Response] => Option[String]): Option[String] = {
     val headers = Map("Authorization" -> s"Bearer $token") ++ otherHeaders
@@ -80,6 +92,18 @@ class MeetupConsumerImpl(configuration: Configuration)(
     optHttpsGet(
       hostAndPath = hostAndPath,
       params = params,
+      headers = headers,
+      responseHandler = responseHandler
+    )
+  }
+
+  private[auth] def makePatchCall(token: String, hostAndPath: String, contentBody: String, otherHeaders: Map[String, String],
+    responseHandler: Option[Response] => Option[String]): Option[String] = {
+    val headers = Map("Authorization" -> s"Bearer $token") ++ otherHeaders
+
+    optHttpsPatchAHC(
+      hostAndPath = hostAndPath,
+      contentBody = contentBody,
       headers = headers,
       responseHandler = responseHandler
     )
@@ -124,8 +148,30 @@ class MeetupConsumerImpl(configuration: Configuration)(
     responseHandler(resp)
   }
 
+  private[auth] def optHttpsPatchAHC(hostAndPath: String, contentBody: String, headers: Map[String, String] = Map(),
+    responseHandler: Option[Response] => Option[String] = defaultPatchResponseHandler): Option[String] = {
+    val opt = Try(asyncHttpHelper.asyncPatchWithBody(hostAndPath, contentBody, headers).get())
+    if (opt.isFailure) {
+      opt.failed.map(th => {
+        log.error(
+          s"""failed to send PATCH: $hostAndPath
+             |  withContentBody:  $contentBody
+             |  andHeaders: $headers
+             |  and error: ${th.getMessage}
+             |  and trace:
+           """.stripMargin
+        )
+        th.printStackTrace()
+      })
+    }
+
+    val resp = opt.toOption
+    responseHandler(resp)
+  }
+
   private[auth] val defaultGetResponseHandler: Option[Response] => Option[String] = defaultResponseHandler("GET")
   private[auth] val defaultPostResponseHandler: Option[Response] => Option[String] = defaultResponseHandler("POST")
+  private[auth] val defaultPatchResponseHandler: Option[Response] => Option[String] = defaultResponseHandler("PATCH")
 
   private[auth] def defaultResponseHandler(methodType: String)(responseOpt: Option[Response]) = {
     responseOpt match {
@@ -168,7 +214,7 @@ class MeetupConsumerImpl(configuration: Configuration)(
     val token = for {
       json <- opt
       JObject(listOfFields) <- parseOpt(json)
-      (key, value) <- listOfFields.find(t => t._1.equalsIgnoreCase("access_token"))
+      (_, value) <- listOfFields.find(t => t._1.equalsIgnoreCase("access_token"))
       JString(tk) <- value.toOption
     } yield tk
     token.foreach { _ => // if there is a token
