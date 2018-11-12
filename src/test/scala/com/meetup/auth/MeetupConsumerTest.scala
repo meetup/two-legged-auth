@@ -73,6 +73,45 @@ class MeetupConsumerTest extends FunSpec with GivenWhenThen with MockitoSugar {
         assert(result.contains("It works!"))
       }
     }
+
+    describe("optHttpsPatchAHC") {
+      it("use custom response handler") {
+        When("a non-200 request is made")
+        val response = mock[Response]
+        mockWhen(response.getStatusCode).thenReturn(409)
+        mockWhen(response.getResponseBody).thenReturn("Tons of conflicts =_=")
+        val futureResponse = mock[ListenableFuture[Response]]
+        mockWhen(futureResponse.get()).thenReturn(response)
+        val httpHelper = mock[AsyncHttpHelper]
+        mockWhen(httpHelper.asyncPatchWithBody(any[String], any[String], any[Map[String, String]])).thenReturn(futureResponse)
+        val consumer = new MeetupConsumerImpl(configuration = configuration)(asyncHttpHelper = httpHelper)
+        val messageFromHandler = "Sorry, error occured."
+        val result = consumer.optHttpsPatchAHC("path", "body", Map.empty, _ => Some(messageFromHandler))
+        Then("the failed response is handled")
+        assert(result.contains(messageFromHandler))
+      }
+
+      it("works for successful response") {
+        Given("the request info")
+        val url = "https://nyan.cat"
+        val formBody = "Leroy Jenkins!!!"
+        val headers = Map("Foo" -> "Bar")
+
+        When("a successful request is made")
+        val response = mock[Response]
+        mockWhen(response.getStatusCode).thenReturn(200)
+        mockWhen(response.getResponseBody).thenReturn("It works!")
+        val futureResponse = mock[ListenableFuture[Response]]
+        mockWhen(futureResponse.get()).thenReturn(response)
+        val httpHelper = mock[AsyncHttpHelper]
+        mockWhen(httpHelper.asyncPatchWithBody(any[String], any[String], any[Map[String, String]])).thenReturn(futureResponse)
+        val consumer = new MeetupConsumerImpl(configuration = configuration)(asyncHttpHelper = httpHelper)
+        val result = consumer.optHttpsPatchAHC(url, formBody, headers)
+
+        Then("the successful response is fetched")
+        assert(result.contains("It works!"))
+      }
+    }
   }
 
 }
